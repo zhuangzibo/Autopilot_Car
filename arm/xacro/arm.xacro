@@ -1,0 +1,531 @@
+<?xml version="1.0"?>
+<robot name="arm" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <!-- Macro for inertia matrix -->
+    <xacro:macro name="sphere_inertial_matrix" params="m r">
+        <inertial>
+            <mass value="${m}" />
+            <inertia ixx="${2*m*r*r/5}" ixy="0" ixz="0"
+                iyy="${2*m*r*r/5}" iyz="0" 
+                izz="${2*m*r*r/5}" />
+        </inertial>
+    </xacro:macro>
+
+    <xacro:macro name="cylinder_inertial_matrix" params="m r h">
+        <inertial>
+            <mass value="${m}" />
+            <inertia ixx="${m*(3*r*r+h*h)/12}" ixy = "0" ixz = "0"
+                iyy="${m*(3*r*r+h*h)/12}" iyz = "0"
+                izz="${m*r*r/2}" /> 
+        </inertial>
+    </xacro:macro>
+
+    <xacro:macro name="box_inertial_matrix" params="m l w h">
+        <inertial>
+            <mass value="${m}" />
+            <inertia ixx="${m*(h*h+w*w)/12}" ixy = "0" ixz = "0"
+                iyy="${m*(h*h+l*l)/12}" iyz = "0"
+                izz="${m*(w*w+l*l)/12}" /> 
+        </inertial>
+    </xacro:macro>
+
+
+    <!--joint-->
+    <xacro:macro name="fixed_parent_to_child" params="parent child x y z fg fy ph">
+        <joint name="${parent}_to_${child}" type="fixed">
+            <origin xyz="${x} ${y} ${z}" rpy="${fg} ${fy} ${ph}" />
+            <parent link="${parent}"/>
+            <child link="${child}"/>
+        </joint>
+    </xacro:macro>
+
+    <xacro:macro name="continuous_parent_to_child" params="parent child x y z fg fy ph ax ay az">
+        <joint name="${parent}_to_${child}" type="continuous">
+            <origin xyz="${x} ${y} ${z}" rpy="${fg} ${fy} ${ph}" />
+            <parent link="${parent}"/>
+            <child link="${child}"/>
+            <axis xyz="${ax} ${ay} ${az}"/>
+        </joint>
+    </xacro:macro>
+
+    <xacro:macro name="prismatic_parent_to_child" params="parent child x y z fg fy ph ax ay az">
+        <joint name="${parent}_to_${child}" type="prismatic">
+            <origin xyz="${x} ${y} ${z}" rpy="${fg} ${fy} ${ph}" />
+            <parent link="${parent}"/>
+            <child link="${child}"/>
+            <axis xyz="${ax} ${ay} ${az}"/>
+            <limit effort="100" lower="0" upper="100" velocity="100"/>
+        </joint>
+    </xacro:macro>
+
+    <xacro:macro name="Position_transmission" params="parent child">
+    	<transmission name="${parent}_to_${child}">
+		    <type>transmission_interface/SimpleTransmission</type>
+		    <joint name="${parent}_to_${child}" >
+            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+            </joint>
+		    <actuator name="${parent}" >
+			    <hardwareInterface>PositionJointInterface</hardwareInterface>
+			    <mechanicalReduction>1</mechanicalReduction>
+		    </actuator>
+	    </transmission>
+    </xacro:macro>
+
+    <material name="Black">
+        <color rgba="0 0 0 1"/>
+    </material>
+
+    <material name="White">
+        <color rgba="1 1 1 1"/>
+    </material>
+
+    <material name="Blue">
+        <color rgba="0 0 1 1"/>
+    </material>
+
+    <material name="Red">
+        <color rgba="1 0 0 1"/>
+    </material>
+
+
+    <!--const values-->
+    <xacro:property name="PI"     value="3.1415926" /> 
+    <xacro:property name="base_pad_length"     value="0.15" /> 
+    <xacro:property name="base_pad_width"     value="0.15" />
+    <xacro:property name="base_pad_height"     value="0.01" /> 
+    <xacro:property name="base_pad_mass"        value="10"/>
+
+    <xacro:property name="base_joint_length"     value="0.05" /> 
+    <xacro:property name="base_joint_width"     value="0.07" />
+    <xacro:property name="base_joint_height"     value="0.07" /> 
+    <xacro:property name="base_joint_mass"        value="0.1"/>
+    
+<!--*************************************************************-->
+    <xacro:property name="first_arm_joint_length"     value="0.02" /> 
+    <xacro:property name="first_arm_joint_radius"     value="0.03" /> 
+    <xacro:property name="first_arm_joint_mass"        value="0.05"/>
+
+    <xacro:property name="first_arm_length"     value="0.02" /> 
+    <xacro:property name="first_arm_width"     value="0.06" />
+    <xacro:property name="first_arm_height"     value="0.25" /> 
+    <xacro:property name="first_arm_mass"        value="0.2"/>
+
+    <xacro:property name="first_joint_length"     value="0.05" /> 
+    <xacro:property name="first_joint_width"     value="0.07" />
+    <xacro:property name="first_joint_height"     value="0.07" /> 
+    <xacro:property name="first_joint_mass"        value="0.1"/>
+
+<!--*************************************************************-->
+
+    <xacro:property name="second_arm_joint_length"     value="0.02" /> 
+    <xacro:property name="second_arm_joint_radius"     value="0.03" /> 
+    <xacro:property name="second_arm_joint_mass"        value="0.05"/>
+
+    <xacro:property name="second_arm_length"     value="0.02" /> 
+    <xacro:property name="second_arm_width"     value="0.06" />
+    <xacro:property name="second_arm_height"     value="0.25" /> 
+    <xacro:property name="second_arm_mass"        value="0.2"/>
+
+    <xacro:property name="second_joint_length"     value="0.05" /> 
+    <xacro:property name="second_joint_width"     value="0.07" />
+    <xacro:property name="second_joint_height"     value="0.07" /> 
+    <xacro:property name="second_joint_mass"        value="0.1"/>
+
+    <!--*************************************************************-->
+
+    <xacro:property name="third_arm_joint_length"     value="0.02" /> 
+    <xacro:property name="third_arm_joint_radius"     value="0.03" /> 
+    <xacro:property name="third_arm_joint_mass"        value="0.05"/>
+
+    <xacro:property name="third_arm_length"     value="0.02" /> 
+    <xacro:property name="third_arm_width"     value="0.06" />
+    <xacro:property name="third_arm_height"     value="0.25" /> 
+    <xacro:property name="third_arm_mass"        value="0.2"/>
+
+    <xacro:property name="third_joint_length"     value="0.05" /> 
+    <xacro:property name="third_joint_width"     value="0.07" />
+    <xacro:property name="third_joint_height"     value="0.07" /> 
+    <xacro:property name="third_joint_mass"        value="0.1"/>
+
+    <!--*************************************************************-->
+
+    <xacro:property name="zhuazi_base_length"     value="0.1" /> 
+    <xacro:property name="zhuazi_base_width"     value="0.07" />
+    <xacro:property name="zhuazi_base_height"     value="0.02" /> 
+    <xacro:property name="zhuazi_base_mass"        value="0.1"/>
+
+    <xacro:property name="zhuazi_length"     value="0.005" /> 
+    <xacro:property name="zhuazi_width"     value="0.04" />
+    <xacro:property name="zhuazi_height"     value="0.07" /> 
+    <xacro:property name="zhuazi_mass"        value="0.05"/>
+
+    <!--parts-->
+<xacro:macro name="base_footprint" >
+        <link name="base_footprint">
+            <visual>
+			 <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+				<box size="0.001 0.001 0.001"/>
+            </geometry>
+            <material name="Black" />
+		    </visual>
+            <collision>
+                <origin xyz="0 0 0" rpy="0 0 0" />
+                <geometry>
+                    <box size="0.001 0.001 0.001"/>
+                </geometry>
+            </collision>
+        </link>
+        <gazebo reference="base_footprint">
+            <material>Gazebo/Black</material>
+        </gazebo>
+</xacro:macro>
+
+<xacro:macro name="base_pad" >
+        <link name="base_pad">
+            <visual>
+			 <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+				<box size="${base_pad_length} ${base_pad_width} ${base_pad_height}"/>
+            </geometry>
+            <material name="Black" />
+		    </visual>
+            <collision>
+                <origin xyz="0 0 0" rpy="0 0 0" />
+                <geometry>
+                    <box size="${base_pad_length} ${base_pad_width} ${base_pad_height}"/>
+                </geometry>
+            </collision>
+            <box_inertial_matrix m="${base_pad_mass}" l="${base_pad_length}" w="${base_pad_width}" h="${base_pad_height}"/>
+        </link>
+        <gazebo reference="base_pad">
+            <material>Gazebo/Black</material>
+        </gazebo>
+</xacro:macro>
+
+<xacro:macro name="base_joint" >
+        <link name="base_joint">
+            <visual>
+			 <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+				<box size="${base_joint_length} ${base_joint_width} ${base_joint_height}"/>
+            </geometry>
+            <material name="Black" />
+		    </visual>
+            <collision>
+                <origin xyz="0 0 0" rpy="0 0 0" />
+                <geometry>
+                    <box size="${base_joint_length} ${base_joint_width} ${base_joint_height}"/>
+                </geometry>
+            </collision>
+            <box_inertial_matrix m="${base_joint_mass}" l="${base_joint_length}" w="${base_joint_width}" h="${base_joint_height}"/>
+        </link>
+        <gazebo reference="base_joint">
+            <material>Gazebo/Black</material>
+        </gazebo>
+    </xacro:macro>
+<!--first_arm-->
+<xacro:macro name="first_arm_joint" params="dir" >
+        <link name="first_arm_joint_${dir}">
+            <visual>
+			 <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <cylinder length="${first_arm_joint_length}" radius="${first_arm_joint_radius}" />
+            </geometry>
+            <material name="Blue" />
+		    </visual>
+            <collision>
+                <origin xyz="0 0 0" rpy="0 0 0" />
+                <geometry>
+                <cylinder length="${first_arm_joint_length}" radius="${first_arm_joint_radius}" />
+                </geometry>
+            </collision>
+            <cylinder_inertial_matrix m="${first_arm_joint_mass}" r="${first_arm_joint_radius}" h="${first_arm_joint_length}"/>
+        </link>
+        <gazebo reference="first_arm_joint_${dir}">
+            <material>Gazebo/Blue</material>
+        </gazebo>
+    </xacro:macro>
+
+<xacro:macro name="first_arm"  params="dir">
+        <link name="first_arm_${dir}">
+            <visual>
+			 <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+				<box size="${first_arm_length} ${first_arm_width} ${first_arm_height}"/>
+            </geometry>
+            <material name="White" />
+		    </visual>
+            <collision>
+                <origin xyz="0 0 0" rpy="0 0 0" />
+                <geometry>
+                    <box size="${first_arm_length} ${first_arm_width} ${first_arm_height}"/>
+                </geometry>
+            </collision>
+            <box_inertial_matrix m="${first_arm_mass}" l="${first_arm_length}" w="${first_arm_width}" h="${first_arm_height}"/>
+        </link>
+        <gazebo reference="first_arm_${dir}">
+            <material>Gazebo/White</material>
+        </gazebo>
+    </xacro:macro>
+
+<xacro:macro name="first_joint" >
+        <link name="first_joint">
+            <visual>
+			 <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+				<box size="${first_joint_length} ${first_joint_width} ${first_joint_height}"/>
+            </geometry>
+            <material name="Black" />
+		    </visual>
+            <collision>
+                <origin xyz="0 0 0" rpy="0 0 0" />
+                <geometry>
+                    <box size="${first_joint_length} ${first_joint_width} ${first_joint_height}"/>
+                </geometry>
+            </collision>
+            <box_inertial_matrix m="${first_joint_mass}" l="${first_joint_length}" w="${first_joint_width}" h="${first_joint_height}"/>
+        </link>
+        <gazebo reference="first_joint">
+            <material>Gazebo/Black</material>
+        </gazebo>
+    </xacro:macro>
+
+<!--second_arm-->
+<xacro:macro name="second_arm_joint" params="dir" >
+        <link name="second_arm_joint_${dir}">
+            <visual>
+			 <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <cylinder length="${second_arm_joint_length}" radius="${second_arm_joint_radius}" />
+            </geometry>
+            <material name="Blue" />
+		    </visual>
+            <collision>
+                <origin xyz="0 0 0" rpy="0 0 0" />
+                <geometry>
+                <cylinder length="${second_arm_joint_length}" radius="${second_arm_joint_radius}" />
+                </geometry>
+            </collision>
+            <cylinder_inertial_matrix m="${second_arm_joint_mass}" r="${second_arm_joint_radius}" h="${second_arm_joint_length}"/>
+        </link>
+        <gazebo reference="second_arm_joint_${dir}">
+            <material>Gazebo/Blue</material>
+        </gazebo>
+    </xacro:macro>
+
+<xacro:macro name="second_arm"  params="dir">
+        <link name="second_arm_${dir}">
+            <visual>
+			 <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+				<box size="${second_arm_length} ${second_arm_width} ${second_arm_height}"/>
+            </geometry>
+            <material name="White" />
+		    </visual>
+            <collision>
+                <origin xyz="0 0 0" rpy="0 0 0" />
+                <geometry>
+                    <box size="${second_arm_length} ${second_arm_width} ${second_arm_height}"/>
+                </geometry>
+            </collision>
+            <box_inertial_matrix m="${second_arm_mass}" l="${second_arm_length}" w="${second_arm_width}" h="${second_arm_height}"/>
+        </link>
+        <gazebo reference="second_arm_${dir}">
+            <material>Gazebo/White</material>
+        </gazebo>
+    </xacro:macro>
+
+<xacro:macro name="second_joint" >
+        <link name="second_joint">
+            <visual>
+			 <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+				<box size="${second_joint_length} ${second_joint_width} ${second_joint_height}"/>
+            </geometry>
+            <material name="Black" />
+		    </visual>
+            <collision>
+                <origin xyz="0 0 0" rpy="0 0 0" />
+                <geometry>
+                    <box size="${second_joint_length} ${second_joint_width} ${second_joint_height}"/>
+                </geometry>
+            </collision>
+            <box_inertial_matrix m="${second_joint_mass}" l="${second_joint_length}" w="${second_joint_width}" h="${second_joint_height}"/>
+        </link>
+        <gazebo reference="second_joint">
+            <material>Gazebo/Black</material>
+        </gazebo>
+    </xacro:macro>
+
+<!--third_arm-->
+<xacro:macro name="third_arm_joint" params="dir" >
+        <link name="third_arm_joint_${dir}">
+            <visual>
+			 <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <cylinder length="${third_arm_joint_length}" radius="${third_arm_joint_radius}" />
+            </geometry>
+            <material name="Blue" />
+		    </visual>
+            <collision>
+                <origin xyz="0 0 0" rpy="0 0 0" />
+                <geometry>
+                <cylinder length="${third_arm_joint_length}" radius="${third_arm_joint_radius}" />
+                </geometry>
+            </collision>
+            <cylinder_inertial_matrix m="${third_arm_joint_mass}" r="${third_arm_joint_radius}" h="${third_arm_joint_length}"/>
+        </link>
+        <gazebo reference="third_arm_joint_${dir}">
+            <material>Gazebo/Blue</material>
+        </gazebo>
+    </xacro:macro>
+
+<xacro:macro name="third_arm"  params="dir">
+        <link name="third_arm_${dir}">
+            <visual>
+			 <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+				<box size="${third_arm_length} ${third_arm_width} ${third_arm_height}"/>
+            </geometry>
+            <material name="White" />
+		    </visual>
+            <collision>
+                <origin xyz="0 0 0" rpy="0 0 0" />
+                <geometry>
+                    <box size="${third_arm_length} ${third_arm_width} ${third_arm_height}"/>
+                </geometry>
+            </collision>
+            <box_inertial_matrix m="${third_arm_mass}" l="${third_arm_length}" w="${third_arm_width}" h="${third_arm_height}"/>
+        </link>
+        <gazebo reference="third_arm_${dir}">
+            <material>Gazebo/White</material>
+        </gazebo>
+    </xacro:macro>
+
+<xacro:macro name="third_joint" >
+        <link name="third_joint">
+            <visual>
+			 <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+				<box size="${third_joint_length} ${third_joint_width} ${third_joint_height}"/>
+            </geometry>
+            <material name="Black" />
+		    </visual>
+            <collision>
+                <origin xyz="0 0 0" rpy="0 0 0" />
+                <geometry>
+                    <box size="${third_joint_length} ${third_joint_width} ${third_joint_height}"/>
+                </geometry>
+            </collision>
+            <box_inertial_matrix m="${third_joint_mass}" l="${third_joint_length}" w="${third_joint_width}" h="${third_joint_height}"/>
+        </link>
+        <gazebo reference="third_joint">
+            <material>Gazebo/Black</material>
+        </gazebo>
+    </xacro:macro>
+
+<!--ZhuaZi-->
+<xacro:macro name="zhuazi_base" >
+        <link name="zhuazi_base">
+            <visual>
+			 <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+				<box size="${zhuazi_base_length} ${zhuazi_base_width} ${zhuazi_base_height}"/>
+            </geometry>
+            <material name="Blue" />
+		    </visual>
+            <collision>
+                <origin xyz="0 0 0" rpy="0 0 0" />
+                <geometry>
+                    <box size="${zhuazi_base_length} ${zhuazi_base_width} ${zhuazi_base_height}"/>
+                </geometry>
+            </collision>
+            <box_inertial_matrix m="${zhuazi_base_mass}" l="${zhuazi_base_length}" w="${zhuazi_base_width}" h="${zhuazi_base_height}"/>
+        </link>
+        <gazebo reference="zhuazi_base">
+            <material>Gazebo/Blue</material>
+        </gazebo>
+    </xacro:macro>
+
+<xacro:macro name="zhuazi" params="dir" >
+        <link name="zhuazi_${dir}">
+            <visual>
+			 <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+				<box size="${zhuazi_length} ${zhuazi_width} ${zhuazi_height}"/>
+            </geometry>
+            <material name="Red" />
+		    </visual>
+            <collision>
+                <origin xyz="0 0 0" rpy="0 0 0" />
+                <geometry>
+                    <box size="${zhuazi_length} ${zhuazi_width} ${zhuazi_height}"/>
+                </geometry>
+            </collision>
+            <box_inertial_matrix m="${zhuazi_mass}" l="${zhuazi_length}" w="${zhuazi_width}" h="${zhuazi_height}"/>
+        </link>
+        <gazebo reference="zhuazi_${dir}">
+            <material>Gazebo/Red</material>
+        </gazebo>
+    </xacro:macro>
+
+    <!--Main-->
+<xacro:macro name="arm">
+
+    <!--bases-->
+    <base_pad/>
+    <base_joint/>
+    <continuous_parent_to_child parent="base_pad" child="base_joint" x="0" y="0" z="${base_joint_height/2+base_pad_height/2}" fg="0" fy="0" ph="0" ax="0" ay="0" az="1" />
+
+    <!--first_arm-->
+    <first_arm_joint dir="right"/>
+    <continuous_parent_to_child parent="base_joint" child="first_arm_joint_right" x="${-first_arm_joint_length/2-base_joint_length/2}" y="0" z="0" fg="0" fy="${PI/2}" ph="0" ax="0" ay="0" az="1"/>
+    <first_arm dir="right"/>
+    <fixed_parent_to_child parent="first_arm_joint_right" child="first_arm_right" z="0" y="0" x="${-first_arm_height/2}" fg="0" fy="${PI/2}" ph="0" />
+    <first_joint />
+    <fixed_parent_to_child parent="first_arm_right" child="first_joint" z="${-first_arm_height/2}" y="0" x="${-first_joint_length/2-first_arm_length/2}" fg="0" fy="0" ph="0" />
+
+    <!--second_arm-->
+    <second_arm_joint dir="right"/>
+    <continuous_parent_to_child parent="first_joint" child="second_arm_joint_right" x="${-second_arm_joint_length/2-second_joint_length/2}" y="0" z="0" fg="0" fy="${PI/2}" ph="0" ax="0" ay="0" az="1"/>
+    <second_arm dir="right"/>
+    <fixed_parent_to_child parent="second_arm_joint_right" child="second_arm_right" z="0" y="0" x="${second_arm_height/2}" fg="0" fy="${PI/2}" ph="0" />
+    <second_joint />
+    <fixed_parent_to_child parent="second_arm_right" child="second_joint" z="${second_arm_height/2}" y="0" x="${-second_joint_length/2-second_arm_length/2}" fg="0" fy="0" ph="0" />
+
+    <!--third-->
+    <third_arm_joint dir="right"/>
+    <continuous_parent_to_child parent="second_joint" child="third_arm_joint_right" x="${-third_arm_joint_length/2-third_joint_length/2}" y="0" z="0" fg="0" fy="${PI/2}" ph="0" ax="0" ay="0" az="1"/>
+    <third_arm dir="right"/>
+    <fixed_parent_to_child parent="third_arm_joint_right" child="third_arm_right" z="0" y="0" x="${-third_arm_height/2}" fg="0" fy="${PI/2}" ph="0" />
+    <third_joint />
+    <fixed_parent_to_child parent="third_arm_right" child="third_joint" z="${-third_arm_height/2}" y="0" x="${-third_joint_length/2-third_arm_length/2}" fg="0" fy="0" ph="0" />
+
+    <!--ZhuaZi-->
+    <zhuazi_base />
+    <fixed_parent_to_child parent="third_joint" child="zhuazi_base" x="0" y="0" z="${-zhuazi_base_height/2-third_joint_height/2}" fg="0" fy="0" ph="0" />
+    <zhuazi  dir="left"/>
+    <prismatic_parent_to_child parent="zhuazi_base" child="zhuazi_left" x="0.03" y="0" z="${-zhuazi_height/2-zhuazi_base_height/2}" fg="0" fy="0" ph="0" ax="1" ay="0" az="0"/>
+    <zhuazi dir="right" />
+    <prismatic_parent_to_child parent="zhuazi_base" child="zhuazi_right" x="-0.03" y="0" z="${-zhuazi_height/2-zhuazi_base_height/2}" fg="0" fy="0" ph="0" ax="1" ay="0" az="0"/>
+
+    <Position_transmission parent="base_pad" child="base_joint"/>
+    <Position_transmission parent="base_joint" child="first_arm_joint_right"/>
+    <Position_transmission parent="first_joint" child="second_arm_joint_right"/>
+    <Position_transmission parent="second_joint" child="third_arm_joint_right"/>
+    <Position_transmission parent="zhuazi_base" child="zhuazi_left"/>
+    <Position_transmission parent="zhuazi_base" child="zhuazi_right"/>
+
+    <gazebo>
+        <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+            <robotNamespace>/arm</robotNamespace>
+        </plugin>
+    </gazebo>
+
+
+    </xacro:macro>
+
+    <!--Main-->
+    <arm/>
+</robot>

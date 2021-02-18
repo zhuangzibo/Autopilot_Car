@@ -1,0 +1,10 @@
+joint_limits:
+    left_motor_to_left_wheel:
+      has_position_limits: false
+      has_velocity_limits: true
+      max_velocity: 1
+
+    right_motor_to_right_wheel:
+      has_position_limits: false
+      has_velocity_limits: true
+      max_velocity: 1

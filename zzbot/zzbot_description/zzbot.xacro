@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+
+<robot name="zzbot" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+	<xacro:include filename="$(find zzbot)/zzbot_description/zzbot_body/zzbot_body.xacro" />
+
+	<xacro:include filename="$(find zzbot)/zzbot_description/sensors/imu.xacro" />
+	<xacro:include filename="$(find zzbot)/zzbot_description/sensors/camera.xacro" />
+	<xacro:include filename="$(find zzbot)/zzbot_description/sensors/rplidar.xacro" />
+	<xacro:include filename="$(find zzbot)/zzbot_description/sensors/kinect.xacro" />
+
+	<!--main body of the car-->
+	<zzbot_body/>
+
+	<!--sensors-->
+	<imu />
+	<kinect_camera/>
+	<rplidar/>
+
+	<!--arm-->
+
+	<fixed_parent_to_child parent="third_link" child="laser_link" x="0" y="0" z="0.025" fg="0" fy="0" ph="0" />
+	<fixed_parent_to_child parent="base_link" child="imu_link" x="0" y="0" z="0.015" fg="0" fy="0" ph="0" />
+	<fixed_parent_to_child parent="second_link" child="kinect_link" x="0.3" y="0" z="0.04" fg="0" fy="0" ph="0" />
+
+	<gazebo>
+  	<plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+    <robotNamespace>/zzbot</robotNamespace>
+  	</plugin>
+  	</gazebo>
+
+    <![CDATA[]]>
+
+</robot>

@@ -1,0 +1,17 @@
+zzbot:
+  # Publish all joint states -----------------------------------
+  joint_state_controller:
+    type: joint_state_controller/JointStateController
+    publish_rate: 50  
+  
+  # Position Controllers ---------------------------------------
+  left_velocity_controller:
+    type: velocity_controllers/JointVelocityController
+    joint: left_motor_to_left_wheel
+    pid: {p: 100.0, i: 0.01, d: 10.0}
+
+  right_velocity_controller:
+    type: velocity_controllers/JointVelocityController
+    joint: right_motor_to_right_wheel
+    pid: {p: 100.0, i: 0.01, d: 10.0}
+ 

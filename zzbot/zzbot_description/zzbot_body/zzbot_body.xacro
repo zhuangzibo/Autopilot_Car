@@ -1,0 +1,511 @@
+<?xml version="1.0"?>
+<robot name="zzbot" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+
+    <!-- Macro for inertia matrix -->
+    <xacro:macro name="sphere_inertial_matrix" params="m r">
+        <inertial>
+            <mass value="${m}" />
+            <inertia ixx="${2*m*r*r/5}" ixy="0" ixz="0"
+                iyy="${2*m*r*r/5}" iyz="0" 
+                izz="${2*m*r*r/5}" />
+        </inertial>
+    </xacro:macro>
+
+    <xacro:macro name="cylinder_inertial_matrix" params="m r h">
+        <inertial>
+            <mass value="${m}" />
+            <inertia ixx="${m*(3*r*r+h*h)/12}" ixy = "0" ixz = "0"
+                iyy="${m*(3*r*r+h*h)/12}" iyz = "0"
+                izz="${m*r*r/2}" /> 
+        </inertial>
+    </xacro:macro>
+
+    <xacro:macro name="box_inertial_matrix" params="m l w h">
+        <inertial>
+            <mass value="${m}" />
+            <inertia ixx="${m*(h*h+w*w)/12}" ixy = "0" ixz = "0"
+                iyy="${m*(h*h+l*l)/12}" iyz = "0"
+                izz="${m*(w*w+l*l)/12}" /> 
+        </inertial>
+    </xacro:macro>
+
+
+    <!--joint-->
+    <xacro:macro name="fixed_parent_to_child" params="parent child x y z fg fy ph">
+        <joint name="${parent}_to_${child}" type="fixed">
+            <origin xyz="${x} ${y} ${z}" rpy="${fg} ${fy} ${ph}" />
+            <parent link="${parent}"/>
+            <child link="${child}"/>
+        </joint>
+    </xacro:macro>
+
+    <xacro:macro name="continuous_parent_to_child" params="parent child x y z fg fy ph ax ay az">
+        <joint name="${parent}_to_${child}" type="continuous">
+            <origin xyz="${x} ${y} ${z}" rpy="${fg} ${fy} ${ph}" />
+            <parent link="${parent}"/>
+            <child link="${child}"/>
+            <axis xyz="${ax} ${ay} ${az}"/>
+        </joint>
+    </xacro:macro>
+
+    <!--transmissions-->
+    <xacro:macro name="velocitytransmission" params="parent child num">
+    	<transmission name="${parent}_to_${child}">
+		    <type>transmission_interface/SimpleTransmission</type>
+		    <joint name="${parent}_to_${child}" >
+            <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
+            </joint>
+		    <actuator name="velocitymotor_${num}" >
+			    <hardwareInterface>VelocityJointInterface</hardwareInterface>
+			    <mechanicalReduction>1</mechanicalReduction>
+		    </actuator>
+	    </transmission>
+    </xacro:macro>
+
+    <xacro:macro name="angletransmission" params="parent child num">
+    	<transmission name="${parent}_to_${child}">
+		    <type>transmission_interface/SimpleTransmission</type>
+		    <joint name="${parent}_to_${child}" >
+            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+            </joint>
+		    <actuator name="positionmotor_${num}" >
+			    <hardwareInterface>PositionJointInterface</hardwareInterface>
+			    <mechanicalReduction>1</mechanicalReduction>
+		    </actuator>
+	    </transmission>
+    </xacro:macro>
+
+    <xacro:macro name="simpletransmission" params="parent child">
+    	<transmission name="${parent}_to_${child}">
+		    <type>transmission_interface/SimpleTransmission</type>
+		    <joint name="${parent}_to_${child}" />
+		    <actuator name="${parent}_to_${child}" >
+			    <hardwareInterface>VelocityJointInterface</hardwareInterface>
+			    <mechanicalReduction>5</mechanicalReduction>
+		    </actuator>
+	    </transmission>
+    </xacro:macro>
+
+
+    <!--colors-->
+    <material name="Black">
+        <color rgba="0 0 0 1"/>
+    </material>
+
+    <material name="White">
+        <color rgba="1 1 1 1"/>
+    </material>
+
+    <material name="Blue">
+        <color rgba="0 0 1 1"/>
+    </material>
+
+    <material name="Red">
+        <color rgba="1 0 0 1"/>
+    </material>
+
+<!--**********************************************************************************************************************************************************************************-->
+
+    <!--const values-->
+    <xacro:property name="PI"     value="3.1415926" /> 
+    <!--bases-->
+    <xacro:property name="base_length"     value="0.005" /> 
+    <xacro:property name="base_radius"     value="0.4" /> 
+    <xacro:property name="base_mass"        value="50"/>
+    <!--main_pillars-->
+    <xacro:property name="main_pillar_length"    value="0.4"/>
+    <xacro:property name="main_pillar_radius"    value="0.04"/>
+    <xacro:property name="main_pillar_mass"       value="1.5"/>
+    <!--pillars-->
+    <xacro:property name="pillar_length"    value="0.2"/>
+    <xacro:property name="pillar_radius"    value="0.015"/>
+    <xacro:property name="pillar_mass"       value="0.05"/>
+    <!--motors-->
+    <xacro:property name="motor_length"  value="0.1"/>
+    <xacro:property name="motor_radius"  value="0.025"/>
+    <xacro:property name="motor_mass"     value="0.4"/>
+    <!--wheels-->
+     <xacro:property name="wheel_mass"   value="0.1"/>
+    <xacro:property name="wheel_length"   value="0.03"/>
+    <xacro:property name="wheel_radius"   value="0.1"/>
+    <!--motor_fix-->
+    <xacro:property name="fix1_length"        value="0.005"/>
+    <xacro:property name="fix1_radius"        value="0.025"/>
+    <xacro:property name="fix2_lenght"        value="0.05"/>
+    <xacro:property name="fix2_width"         value="0.0325"/>
+    <xacro:property name="fix2_thick"           value="0.005"/>
+    <!--ball-->
+    <xacro:property name="uni_wheel_radius"    value="0.045"/>
+    <xacro:property name="uni_wheel_mass"    value="0.5"/>
+    <xacro:property name="uni_wheel_base_radius"    value="0.05"/>
+    <xacro:property name="uni_wheel_base_length"    value="0.02"/>
+    <xacro:property name="uni_wheel_base_mass"    value="0.05"/>
+    <!--mechnical_arm-->
+<!--**********************************************************************************************************************************************************************************-->
+
+    <!--parts-->
+    <!--wheel-->
+    <xacro:macro name="wheel"  params="dir r p y">
+        <link name="${dir}_wheel">
+            <visual>
+			 <origin rpy="${r} ${p} ${y}" xyz="0 0 0"/>
+            <geometry>
+				<cylinder length="${wheel_length}" radius="${wheel_radius}"/>
+            </geometry>
+            <material name="Black" />
+		    </visual>
+            <collision>
+                <origin xyz="0 0 0" rpy="${r} ${p} ${y}" />
+                <geometry>
+                    <cylinder length="${wheel_length}" radius="${wheel_radius}" />
+                </geometry>
+            </collision>
+            <cylinder_inertial_matrix  m="${wheel_mass}" r="${wheel_radius}" h="${wheel_length}" />
+        </link>
+        <gazebo reference="${dir}_wheel">
+            <material>Gazebo/Black</material>
+        </gazebo>
+    </xacro:macro>
+
+    <xacro:macro name="back_uni_wheel">
+        <link name="back_uni_wheel_base">
+            <visual>
+                <origin xyz="0 0 0" rpy="0 0 0" />
+                <geometry>
+                    <cylinder length="${uni_wheel_base_length}" radius="${uni_wheel_base_radius}"/>
+                </geometry>
+                <material name="yellow" />
+            </visual>
+            <collision>
+                <geometry>
+                    <cylinder length="${uni_wheel_base_length}" radius="${uni_wheel_base_radius}"/>
+                </geometry>
+                <origin xyz="0 0 0 " rpy="0 0 0" /> 
+            </collision>      
+            <cylinder_inertial_matrix  m="${uni_wheel_base_mass}" r="${uni_wheel_base_radius}" h="${uni_wheel_base_length}" />
+        </link>
+        <gazebo reference="back_uni_wheel_base">
+            <material>Gazebo/Black</material>
+        </gazebo>
+        <joint name="base_to_back_uni_wheel_base" type="continuous">
+            <parent link="base_link"/>
+            <child link="back_uni_wheel_base"/>
+            <origin xyz="${-base_radius/2} 0 ${-uni_wheel_base_length/2}" rpy="0 0 0"/>
+            <axis xyz="0 0 1"/>
+        </joint>
+
+
+        <link name="back_uni_wheel">
+            <visual>
+                <origin xyz="0 0 0 " rpy="0 0 0" /> 
+                <geometry>
+                    <sphere radius="${uni_wheel_radius}" />
+                </geometry>
+                <material name="Black" />
+            </visual>  
+            <collision>
+                <geometry>
+                    <sphere radius="${uni_wheel_radius}" />
+                </geometry>
+                <origin xyz="0 0 0 " rpy="0 0 0" /> 
+            </collision>      
+            <sphere_inertial_matrix  m="${uni_wheel_mass}" r="${uni_wheel_radius}" />
+        </link>
+        <gazebo reference="back_uni_wheel">
+            <material>Gazebo/Black</material>
+        </gazebo>
+        <joint name="back_uni_wheel_base_to_back_uni_wheel" type="continuous">
+            <parent link="back_uni_wheel_base"/>
+            <child link="back_uni_wheel"/>
+            <origin xyz="-0.02 0 ${-uni_wheel_radius}" rpy="0 0 0"/>
+            <axis xyz="0 1 0"/>
+        </joint>
+    </xacro:macro>
+
+    <xacro:macro name="front_uni_wheel">
+        <link name="front_uni_wheel_base">
+            <visual>
+                <origin xyz="0 0 0" rpy="0 0 0" />
+                <geometry>
+                    <cylinder length="${uni_wheel_base_length}" radius="${uni_wheel_base_radius}"/>
+                </geometry>
+                <material name="yellow" />
+            </visual>
+            <collision>
+                <geometry>
+                    <cylinder length="${uni_wheel_base_length}" radius="${uni_wheel_base_radius}"/>
+                </geometry>
+                <origin xyz="0 0 0 " rpy="0 0 0" /> 
+            </collision>      
+            <cylinder_inertial_matrix  m="${uni_wheel_base_mass}" r="${uni_wheel_base_radius}" h="${uni_wheel_base_length}" />
+        </link>
+        <gazebo reference="front_uni_wheel_base">
+            <material>Gazebo/Black</material>
+        </gazebo>
+        <joint name="base_to_front_uni_wheel_base" type="continuous">
+            <parent link="base_link"/>
+            <child link="front_uni_wheel_base"/>
+            <origin xyz="${base_radius/2} 0 ${-uni_wheel_base_length/2}" rpy="0 0 0"/>
+            <axis xyz="0 0 1"/>
+        </joint>
+
+
+        <link name="front_uni_wheel">
+            <visual>
+                <origin xyz="0 0 0 " rpy="0 0 0" /> 
+                <geometry>
+                    <sphere radius="${uni_wheel_radius}" />
+                </geometry>
+                <material name="Black" />
+            </visual>  
+            <collision>
+                <geometry>
+                    <sphere radius="${uni_wheel_radius}" />
+                </geometry>
+                <origin xyz="0 0 0 " rpy="0 0 0" /> 
+            </collision>      
+            <sphere_inertial_matrix  m="${uni_wheel_mass}" r="${uni_wheel_radius}" />
+        </link>
+        <gazebo reference="front_uni_wheel">
+            <material>Gazebo/Black</material>
+        </gazebo>
+        <joint name="front_uni_wheel_base_to_front_uni_wheel" type="continuous">
+            <parent link="front_uni_wheel_base"/>
+            <child link="front_uni_wheel"/>
+            <origin xyz="0.02 0 ${-uni_wheel_radius}" rpy="0 0 0"/>
+            <axis xyz="0 1 0"/>
+        </joint>
+    </xacro:macro>
+
+    <!--motor-->
+    <xacro:macro name="motor"  params="dir r p y">
+        <link name="${dir}_motor">
+            <visual>
+			    <origin rpy="${r} ${p} ${y}" xyz="0 0 0"/>
+                <geometry>
+				    <cylinder length="${motor_length}" radius="${motor_radius}"/>
+                </geometry>
+                <material name="Black" />
+		    </visual>
+            <collision>
+                <origin xyz="0 0 0" rpy="1.5707 0 0 " />
+                <geometry>
+                    <cylinder length="${motor_length}" radius="${motor_radius}" />
+                </geometry>
+            </collision>
+            <cylinder_inertial_matrix  m="${motor_mass}" r="${motor_radius}" h="${motor_length}" />
+        </link>
+        <gazebo reference="${dir}_motor">
+            <material>Gazebo/White</material>
+        </gazebo>
+    </xacro:macro>
+
+    <!--pillars-->
+    <xacro:macro name="pillar" params="num">
+        <link name="pillar_${num}">
+            <visual>
+                    <origin xyz="0 0 0" rpy="0 0 0"/>
+                    <geometry>
+                        <cylinder length="${pillar_length}" radius="${pillar_radius}" />
+                    </geometry>
+            </visual>
+            <collision>
+                <origin xyz="0 0 0" rpy="0 0 0 " />
+                <geometry>
+                    <cylinder length="${pillar_length}" radius="${pillar_radius}" />
+                </geometry>
+            </collision>
+            <cylinder_inertial_matrix  m="${pillar_mass}" r="${pillar_radius}" h="${pillar_length}" />
+        </link>
+        <gazebo reference="pillar_${num}">
+            <material >Gazebo/White</material>
+        </gazebo>
+    </xacro:macro>
+
+    <xacro:macro name="main_pillar" params="num">
+        <link name="main_pillar_${num}">
+            <visual>
+                    <origin xyz="0 0 0" rpy="0 0 0"/>
+                    <geometry>
+                        <cylinder length="${main_pillar_length}" radius="${main_pillar_radius}" />
+                    </geometry>
+            </visual>
+            <collision>
+                <origin xyz="0 0 0" rpy="0 0 0 " />
+                <geometry>
+                    <cylinder length="${main_pillar_length}" radius="${main_pillar_radius}" />
+                </geometry>
+            </collision>
+            <cylinder_inertial_matrix  m="${main_pillar_mass}" r="${main_pillar_radius}" h="${main_pillar_length}" />
+        </link>
+        <gazebo reference="main_pillar_${num}">
+            <material >Gazebo/White</material>
+        </gazebo>
+    </xacro:macro>
+
+    <!--bases-->
+    <xacro:macro name="base_link">
+        <link name="base_footprint">
+            <visual>
+                <origin xyz="0 0 0" rpy="0 0 0" />
+                <geometry>
+                    <box size="0.001 0.001 0.001" />
+                </geometry>
+            </visual>
+        </link>
+
+        <joint name="base_footprint_joint" type="fixed">
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <parent link="base_footprint"/>
+            <child link="base_link" />
+        </joint>
+
+        <link name="base_link">
+            <cylinder_inertial_matrix  m="${base_mass}" r="${base_radius}" h="${base_length}" />
+            <visual>
+                <origin xyz=" 0 0 0" rpy="0 0 0" />
+                <geometry>
+                    <cylinder length="${base_length}" radius="${base_radius}"/>
+                </geometry>
+                <material name="Blue" />
+            </visual>
+
+            <collision>
+                <origin xyz="0 0 0" rpy="0 0 0" />
+                <geometry>
+                    <cylinder length="${base_length}" radius="${base_radius}"/>
+                </geometry>
+            </collision>   
+        </link>
+        <gazebo reference="base_link">
+            <material>Gazebo/Blue</material>
+        </gazebo>
+    </xacro:macro>
+    <xacro:macro name="second_link">
+        <link name="second_link">
+            <cylinder_inertial_matrix  m="${base_mass}" r="${base_radius}" h="${base_length}" />
+            <visual>
+                <origin xyz=" 0 0 0" rpy="0 0 0" />
+                <geometry>
+                    <cylinder length="${base_length}" radius="${base_radius}"/>
+                </geometry>
+                <material name="yellow" />
+            </visual>
+
+            <collision>
+                <origin xyz="0 0 0" rpy="0 0 0" />
+                <geometry>
+                    <cylinder length="${base_length}" radius="${base_radius}"/>
+                </geometry>
+            </collision>   
+        </link>
+        <gazebo reference="second_link">
+            <material>Gazebo/Blue</material>
+        </gazebo>
+    </xacro:macro>
+    <xacro:macro name="third_link">
+        <link name="third_link">
+            <cylinder_inertial_matrix  m="${base_mass}" r="${base_radius}" h="${base_length}" />
+            <visual>
+                <origin xyz=" 0 0 0" rpy="0 0 0" />
+                <geometry>
+                    <cylinder length="${base_length}" radius="${base_radius}"/>
+                </geometry>
+                <material name="yellow" />
+            </visual>
+
+            <collision>
+                <origin xyz="0 0 0" rpy="0 0 0" />
+                <geometry>
+                    <cylinder length="${base_length}" radius="${base_radius}"/>
+                </geometry>
+            </collision>   
+        </link>
+        <gazebo reference="third_link">
+            <material>Gazebo/Blue</material>
+        </gazebo>
+    </xacro:macro>
+<!--**********************************************************************************************************************************************************************************-->
+
+    <!--Main-->
+    <xacro:macro name="zzbot_body">
+        <!--bases-->
+        <base_link/>
+        <second_link/>
+        <fixed_parent_to_child parent="base_link" child="second_link" x="0" y="0" z="${pillar_length}" fg="0" fy="0" ph="0" />
+        <third_link/>
+        <fixed_parent_to_child parent="second_link" child="third_link" x="0" y="0" z="${pillar_length}" fg="0" fy="0" ph="0" />
+        
+        <!--pillars-->
+        <pillar num="1" />
+        <fixed_parent_to_child parent="base_link" child="pillar_1" x="${base_radius*0.6} " y="${base_radius*0.6}" z="${pillar_length/2}" fg="0" fy="0" ph="0"/>
+        <pillar num="2" />
+        <fixed_parent_to_child parent="base_link" child="pillar_2" x="${base_radius*0.6} " y="${-base_radius*0.6}" z="${pillar_length/2}" fg="0" fy="0" ph="0"/>
+        <pillar num="3" />
+        <fixed_parent_to_child parent="base_link" child="pillar_3" x="${-base_radius*0.6} " y="${base_radius*0.6}" z="${pillar_length/2}" fg="0" fy="0" ph="0"/>
+        <pillar num="4" />
+        <fixed_parent_to_child parent="base_link" child="pillar_4" x="${-base_radius*0.6} " y="${-base_radius*0.6}" z="${pillar_length/2}" fg="0" fy="0" ph="0"/>
+
+        <pillar num="5" />
+        <fixed_parent_to_child parent="second_link" child="pillar_5" x="${base_radius*0.6} " y="${base_radius*0.6}" z="${pillar_length/2}" fg="0" fy="0" ph="0"/>
+        <pillar num="6" />
+        <fixed_parent_to_child parent="second_link" child="pillar_6" x="${base_radius*0.6} " y="${-base_radius*0.6}" z="${pillar_length/2}" fg="0" fy="0" ph="0"/>
+        <pillar num="7" />
+        <fixed_parent_to_child parent="second_link" child="pillar_7" x="${-base_radius*0.6} " y="${base_radius*0.6}" z="${pillar_length/2}" fg="0" fy="0" ph="0"/>
+        <pillar num="8" />
+        <fixed_parent_to_child parent="second_link" child="pillar_8" x="${-base_radius*0.6} " y="${-base_radius*0.6}" z="${pillar_length/2}" fg="0" fy="0" ph="0"/>
+              
+        <!--left_driver-->
+        <motor dir="left" r="1.5707" p="0" y="0" />
+	    <fixed_parent_to_child parent="base_link" child="left_motor" x="${-base_radius/2}" y="${base_radius/2}" z="0" fg="0" fy="0" ph="0"/>
+        <wheel dir="left" r="1.5707" p="0" y="0" />
+        <continuous_parent_to_child parent="left_motor" child="left_wheel" x="0" y="${motor_length/2}" z="0" fg="0" fy="0" ph="0" ax="0" ay="1" az="0" />
+
+        <!--If using ros-controller,activate the following line-->
+        <!--<velocitytransmission parent="left_motor" child="left_wheel" num="1"/>-->
+
+        <!--If using independent diff-controller, activate the following line-->
+        <simpletransmission parent="left_motor" child="left_wheel" />
+
+        <!--right_driver-->
+        <motor dir="right" r="-1.5707" p="0" y="0" />
+	    <fixed_parent_to_child parent="base_link" child="right_motor" x="${-base_radius/2}" y="${-base_radius/2}" z="0" fg="0" fy="0" ph="0"/>
+        <wheel dir="right" r="-1.5707" p="0" y="0" />
+        <continuous_parent_to_child parent="right_motor" child="right_wheel" x="0" y="${-motor_length/2}" z="0" fg="0" fy="0" ph="0" ax="0" ay="1" az="0" />
+
+        <!--If using ros-controller,activate the following line-->
+        <!--<velocitytransmission parent="right_motor" child="right_wheel" num="2"/>-->
+        
+        <!--If using independent diff-controller, activate the following line-->
+        <simpletransmission parent="right_motor" child="right_wheel" />
+
+        <!--front_wheel-->
+	    <front_uni_wheel />
+
+        <gazebo>
+            <plugin name="differential_drive_controller" filename="libgazebo_ros_diff_drive.so">
+                <rosDebugLevel>Debug</rosDebugLevel>
+                <publishWheelTF>true</publishWheelTF>
+                <robotNamespace>/</robotNamespace>
+                <publishTf>1</publishTf>
+                <publishWheelJointState>true</publishWheelJointState>
+                <alwaysOn>true</alwaysOn>
+                <updateRate>100.0</updateRate>
+                <legacyMode>true</legacyMode>
+                <leftJoint>left_motor_to_left_wheel</leftJoint>
+                <rightJoint>right_motor_to_right_wheel</rightJoint>
+                <wheelSeparation>${base_radius*2}</wheelSeparation>
+                <wheelDiameter>${2*wheel_radius}</wheelDiameter>
+                <broadcastTF>1</broadcastTF>
+                <wheelTorque>30</wheelTorque>
+                <wheelAcceleration>1.8</wheelAcceleration>
+                <commandTopic>cmd_vel</commandTopic>
+                <odometryFrame>odom</odometryFrame> 
+                <odometryTopic>odom</odometryTopic> 
+                <robotBaseFrame>base_footprint</robotBaseFrame>
+            </plugin>
+        </gazebo> 
+
+    </xacro:macro>
+</robot>

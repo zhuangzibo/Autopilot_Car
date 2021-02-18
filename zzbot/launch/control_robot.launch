@@ -1,0 +1,48 @@
+<launch>
+
+    <!-- 设置launch文件的参数 -->
+    <arg name="world_name" value="$(find zzbot)/worlds/test.world"/>
+    <arg name="paused" default="false"/>
+    <arg name="use_sim_time" default="true"/>
+    <arg name="gui" default="true"/>
+    <arg name="headless" default="false"/>
+    <arg name="debug" default="false"/>
+
+    <!-- 运行gazebo仿真环境 -->
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+        <arg name="world_name" value="$(arg world_name)" />
+        <arg name="debug" value="$(arg debug)" />
+        <arg name="gui" value="$(arg gui)" />
+        <arg name="paused" value="$(arg paused)"/>
+        <arg name="use_sim_time" value="$(arg use_sim_time)"/>
+        <arg name="headless" value="$(arg headless)"/>
+    </include>
+
+    <rosparam file="$(find zzbot)/zzbot_description/config/arm_gazebo_controller.yaml" command="load"/>
+    <rosparam file="$(find zzbot)/zzbot_description/config/arm_limits.yaml" command="load"/>
+
+    <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false"
+      output="screen" ns="/zzbot" args="joint_state_controller
+                                      left_velocity_controller
+                                      right_velocity_controller
+                                      "/>
+
+    <!-- 运行joint_state_publisher节点，发布机器人的关节状态 -->
+    <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" />
+    
+    <!-- 运行robot_state_publisher节点，发布tf -->
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"   >
+        <param name="publish_frequency" type="double" value="50.0" />
+    </node>
+
+    <!-- 运行rviz可视化界面 -->
+    <node name="rviz" pkg="rviz" type="rviz" />
+
+    <!-- 加载机器人模型参数 -->
+    <param name="robot_description" command="$(find xacro)/xacro  $(find zzbot)/zzbot_description/zzbot.xacro" /> 
+
+    <!-- 导入spawn_urdf节点，使Gazebo能够识别urdf文件。需要修改的参数为功能包的路径 -->
+    <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen"
+          args="-urdf -model mrobot -param robot_description "/>
+</launch>
+
