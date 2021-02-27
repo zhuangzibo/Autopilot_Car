@@ -43,6 +43,6 @@
 
     <!-- 导入spawn_urdf节点，使Gazebo能够识别urdf文件。需要修改的参数为功能包的路径 -->
     <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen"
-          args="-urdf -model mrobot -param robot_description "/>
+          args="-urdf -model mrobot -param robot_description -z 0.1 "/>
 </launch>
 

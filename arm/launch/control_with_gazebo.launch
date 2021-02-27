@@ -16,7 +16,7 @@
     </include>
 
     <!-- 加载模型文件 -->
-    <param name="robot_description" command="$(find xacro)/xacro '$(find arm)/xacro/arm.xacro'" /> 
+    <param name="robot_description" command="$(find xacro)/xacro '$(find arm)/xacro/arm_main.xacro'" /> 
 
     <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen"
 	args="-urdf -model arm -param robot_description"/> 
@@ -43,5 +43,7 @@
           respawn="false" output="screen">
         <remap from="/joint_states" to="/arm/joint_states" />
     </node>
+
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find urdf_tutorial)/urdf.rviz" />
 
 </launch>

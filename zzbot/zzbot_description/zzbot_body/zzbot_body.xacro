@@ -390,7 +390,7 @@
                 <geometry>
                     <cylinder length="${base_length}" radius="${base_radius}"/>
                 </geometry>
-                <material name="yellow" />
+                <material name="Blue" />
             </visual>
 
             <collision>
@@ -412,7 +412,7 @@
                 <geometry>
                     <cylinder length="${base_length}" radius="${base_radius}"/>
                 </geometry>
-                <material name="yellow" />
+                <material name="Blue" />
             </visual>
 
             <collision>
@@ -458,7 +458,7 @@
               
         <!--left_driver-->
         <motor dir="left" r="1.5707" p="0" y="0" />
-	    <fixed_parent_to_child parent="base_link" child="left_motor" x="${-base_radius/2}" y="${base_radius/2}" z="0" fg="0" fy="0" ph="0"/>
+	    <fixed_parent_to_child parent="base_link" child="left_motor" x="0" y="${base_radius/2}" z="0" fg="0" fy="0" ph="0"/>
         <wheel dir="left" r="1.5707" p="0" y="0" />
         <continuous_parent_to_child parent="left_motor" child="left_wheel" x="0" y="${motor_length/2}" z="0" fg="0" fy="0" ph="0" ax="0" ay="1" az="0" />
 
@@ -470,7 +470,7 @@
 
         <!--right_driver-->
         <motor dir="right" r="-1.5707" p="0" y="0" />
-	    <fixed_parent_to_child parent="base_link" child="right_motor" x="${-base_radius/2}" y="${-base_radius/2}" z="0" fg="0" fy="0" ph="0"/>
+	    <fixed_parent_to_child parent="base_link" child="right_motor" x="0" y="${-base_radius/2}" z="0" fg="0" fy="0" ph="0"/>
         <wheel dir="right" r="-1.5707" p="0" y="0" />
         <continuous_parent_to_child parent="right_motor" child="right_wheel" x="0" y="${-motor_length/2}" z="0" fg="0" fy="0" ph="0" ax="0" ay="1" az="0" />
 
@@ -482,6 +482,7 @@
 
         <!--front_wheel-->
 	    <front_uni_wheel />
+        <back_uni_wheel />
 
         <gazebo>
             <plugin name="differential_drive_controller" filename="libgazebo_ros_diff_drive.so">

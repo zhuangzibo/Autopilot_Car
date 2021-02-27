@@ -474,6 +474,8 @@
 <xacro:macro name="arm">
 
     <!--bases-->
+    <base_footprint/>
+    <fixed_parent_to_child parent="base_footprint" child="base_pad" x="0" y="0" z="0" fg="0" fy="0" ph="0" />
     <base_pad/>
     <base_joint/>
     <continuous_parent_to_child parent="base_pad" child="base_joint" x="0" y="0" z="${base_joint_height/2+base_pad_height/2}" fg="0" fy="0" ph="0" ax="0" ay="0" az="1" />
@@ -526,6 +528,4 @@
 
     </xacro:macro>
 
-    <!--Main-->
-    <arm/>
 </robot>

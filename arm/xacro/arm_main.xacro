@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<robot name="arm" xmlns:xacro="http://www.ros.org/wiki/xacro">
+<xacro:include filename="$(find arm)/xacro/camera.xacro" />
+<xacro:include filename="$(find arm)/xacro/arm.xacro" />
+
+<arm/>
+<usb_camera/>
+
+<fixed_parent_to_child parent="zhuazi_base" child="camera_link" x="0" y="0.05" z="0" fg="0" fy="1.57" ph="0" />
+
+</robot>

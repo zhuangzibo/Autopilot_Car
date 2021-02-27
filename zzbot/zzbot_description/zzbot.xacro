@@ -13,15 +13,15 @@
 	<zzbot_body/>
 
 	<!--sensors-->
+	<rplidar/>
 	<imu />
 	<kinect_camera/>
-	<rplidar/>
 
 	<!--arm-->
-
 	<fixed_parent_to_child parent="third_link" child="laser_link" x="0" y="0" z="0.025" fg="0" fy="0" ph="0" />
 	<fixed_parent_to_child parent="base_link" child="imu_link" x="0" y="0" z="0.015" fg="0" fy="0" ph="0" />
 	<fixed_parent_to_child parent="second_link" child="kinect_link" x="0.3" y="0" z="0.04" fg="0" fy="0" ph="0" />
+
 
 	<gazebo>
   	<plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
@@ -29,6 +29,10 @@
   	</plugin>
   	</gazebo>
 
-    <![CDATA[]]>
+    <![CDATA[
+
+
+
+	]]>
 
 </robot>
